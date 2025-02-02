@@ -40,11 +40,11 @@ app.get('/auto', async (req, res) => {
   }
 
   try {
-    const browser = await puppeteer.launch({ headless: true }); // Set headless: true for no browser UI
+    const browser = await puppeteer.launch({ headless: true, timeout: 0 }); // No timeout for browser launch
     const page = await browser.newPage();
 
     // Step 1: Visit the login page
-    await page.goto('https://www.nrcmec.org/Student/login.php');
+    await page.goto('https://www.nrcmec.org/Student/login.php', { waitUntil: 'domcontentloaded', timeout: 30000 });
 
     // Step 2: Fill the login form
     await page.type('#roll_no', username);  // Fill in the roll number
@@ -54,13 +54,13 @@ app.get('/auto', async (req, res) => {
     await page.click('.btn');
     
     // Wait for the navigation to complete
-    await page.waitForNavigation();
+    await page.waitForNavigation({ timeout: 30000 });
 
     // Step 4: Visit the attendance page
-    await page.goto('https://www.nrcmec.org/Student/Date_wise_attendance.php');
+    await page.goto('https://www.nrcmec.org/Student/Date_wise_attendance.php', { waitUntil: 'domcontentloaded', timeout: 30000 });
 
     // Wait for the table to load
-    await page.waitForSelector('table'); // Adjust the selector to the table on the page
+    await page.waitForSelector('table', { timeout: 30000 });
 
     // Step 5: Extract the table HTML or data
     const tableData = await page.evaluate(() => {
@@ -87,8 +87,8 @@ app.get('/auto', async (req, res) => {
     // Close the browser after automation is done
     await browser.close();
   } catch (error) {
-    console.error('Error during automation:', error);
-    res.render('show', { tableData: null, Attendance: null, error, username});
+    
+    res.render('show', { tableData: null, Attendance: null, error: error.message, username });
   }
 });
 

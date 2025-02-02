@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title id="pageTitle">Login</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -105,6 +105,7 @@
         const usernameInput = document.getElementById('username');
         const buttonText = document.getElementById('button-text');
         const spinner = document.getElementById('spinner');
+        const pageTitle = document.getElementById('pageTitle');
 
         form.addEventListener('submit', function(event) {
             event.preventDefault();
@@ -112,11 +113,16 @@
             const username = usernameInput.value.trim();
 
             if (username) {
+                // Change title to "Logging in..."
+                pageTitle.textContent = 'Logging in...';
                 buttonText.style.display = 'none';
                 spinner.style.display = 'block';
+
                 setTimeout(() => {
-                    form.submit();
-                }, 1000);
+                    // Change title to "Fetching Attendance..."
+                    pageTitle.textContent = 'Fetching Attendance...';
+                    form.submit();  // Proceed to submit the form after 2 seconds
+                }, 2000);  // 2-second delay
             } else {
                 alert('Please enter a username');
             }
