@@ -1,5 +1,6 @@
 const express = require('express');
 const puppeteer = require('puppeteer');
+const cookieParser = require('cookie-parser');
 const path = require('path');
 
 const app = express();
@@ -8,17 +9,24 @@ const PORT = 8080;
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // Home route
 app.get('/', (req, res) => {
-  res.render('login');
+  const username = req.cookies.username;
+  if (username) {
+    res.redirect('/auto');
+  } else {
+    res.render('login'); 
+  }
 });
 
-// Handle login form submission
+// Handle login and set the cookie
 app.post('/login', (req, res) => {
   const { username } = req.body;
   if (username) {
-    res.redirect(`/auto?username=${username}`);
+    res.cookie('username', username, { httpOnly: true });
+    res.redirect('/auto');
   } else {
     res.render('login', { err: 'Username is required' });
   }
@@ -26,13 +34,13 @@ app.post('/login', (req, res) => {
 
 // Attendance automation route
 app.get('/auto', async (req, res) => {
-  const { username } = req.query;
+  const username = req.cookies.username;
   if (!username) {
     return res.redirect('/');
   }
 
   try {
-    const browser = await puppeteer.launch({ headless: true });
+    const browser = await puppeteer.launch({ headless: true }); // Set headless: true for no browser UI
     const page = await browser.newPage();
 
     // Step 1: Visit the login page
@@ -52,7 +60,7 @@ app.get('/auto', async (req, res) => {
     await page.goto('https://www.nrcmec.org/Student/Date_wise_attendance.php');
 
     // Wait for the table to load
-    await page.waitForSelector('table');
+    await page.waitForSelector('table'); // Adjust the selector to the table on the page
 
     // Step 5: Extract the table HTML or data
     const tableData = await page.evaluate(() => {
@@ -68,7 +76,7 @@ app.get('/auto', async (req, res) => {
       const container = document.querySelector('.container-user');
       if (container) {
         const pTags = container.querySelectorAll('p');
-        return pTags.length >= 3 ? pTags[2].innerText.trim() : null;
+        return pTags.length >= 3 ? pTags[2].innerText.trim() : null; // Get the third <p> tag (index 2)
       }
       return null;
     });
@@ -82,6 +90,12 @@ app.get('/auto', async (req, res) => {
     console.error('Error during automation:', error);
     res.render('show', { tableData: null, Attendance: null, error, username});
   }
+});
+
+// Logout and clear cookie
+app.post('/logout', (req, res) => {
+  res.clearCookie('username');
+  res.redirect('/');
 });
 
 // Start the server
