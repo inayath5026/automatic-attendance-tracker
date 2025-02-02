@@ -35,6 +35,9 @@
         tr:hover td {
           background-color: #e9f7ff;
         }
+        .red {
+          color: red;
+        }
     </style>
 </head>
 <body>
@@ -54,7 +57,7 @@
               </tr>
             </thead>
             <tbody>
-              <% tableData.slice(1).reverse().forEach(row => { %> <!-- Reversed rows -->
+              <% tableData.slice(1).reverse().forEach(row => { %> 
                 <tr>
                   <% row.forEach(cell => { %>
                     <td class="<%= cell === 'A' ? 'red' : '' %>"><%= cell %></td>
